@@ -1,0 +1,96 @@
+====================================================================================================
+CURSO API REST KTOR - SELECIONANDO
+====================================================================================================
+
+
+DAO
+----------------------------------------------------------------------------------------------------
+- Acrescentar os seguintes métodos no arquivo 'ExpenseDAO.kt'
+
+    ...
+    fun findAll(): List<Expense> {
+        val connection = dataSource.connection
+        var resultSet: ResultSet? = null
+        var list = mutableListOf<Expense>()
+        try {
+            val sql = "SELECT id, description, value, paid_at FROM expenses"
+
+            val preparedStatement = connection.prepareStatement(sql)
+            resultSet = preparedStatement.executeQuery()
+            while (resultSet.next()) {
+                list.add(buildExpenseObject(resultSet))
+            }
+
+        } catch(e: Exception) {
+            e.printStackTrace()
+        } finally {
+            resultSet?.close()
+            connection.close()
+        }
+        return list
+    }
+
+    private fun buildExpenseObject(resultSet: ResultSet) = Expense(
+        id = resultSet.getInt("id"),
+        description = resultSet.getString("description"),
+        value = resultSet.getDouble("value"),
+        paid_at = resultSet.getTimestamp("paid_at").toLocalDateTime().toLocalDate()
+    )
+    ...
+    
+    
+Service
+----------------------------------------------------------------------------------------------------
+- Acrescentar o seguinte método no arquivo 'ExpenseService.kt'
+
+    ...
+    fun findAll() = dao.findAll()
+    ...
+    
+
+Route
+----------------------------------------------------------------------------------------------------
+- Acrescentar a seguinte rota no arquivo 'ExpenseRoute.kt'
+
+    ...
+    get {
+       val response = service.findAll()
+       call.respond(HttpStatusCode.OK, response)
+    }
+    ...
+
+
+Verificando
+----------------------------------------------------------------------------------------------------
+- Reiniciar a aplicação
+
+- Iniciar o Postman
+
+- Criar uma requisição GET
+
+  URL:
+  
+    http://localhost:8080/expenses
+  
+  Payload:
+  
+    N.A.
+
+  Resposta:
+  
+  [
+    {
+      "id": 1,
+      "description": "Luz",
+      "value": 147.8,
+      "paid_at": "2023-11-05"
+    },
+    {
+      "id": 2,
+      "description": "Condomínio",
+      "value": 256.00,
+      "paid_at": "2023-11-05"
+    }
+  ]
+
+

@@ -1,0 +1,54 @@
+====================================================================================================
+CURSO API REST KTOR - PROPERTIES
+====================================================================================================
+
+
+Aquivo de propriedades
+----------------------------------------------------------------------------------------------------
+- Adicionar as seguintes linhas no arquivo 'application.conf'
+
+database {
+    driver: "com.mysql.cj.jdbc.Driver"
+    url: "jdbc:mysql://localhost:3306/expensebook"
+    url: ${?DB_URL}
+    username: "root"
+    username: ${?DB_USERNAME}
+    password: "root"
+    password: ${?DB_PASSWORD}
+}
+
+- Criar o pacote 'com.ctseducare.expensebook.properties'
+
+- Criar o arquivo 'DatabaseProperties.kt'
+
+data class DatabaseProperties(
+    val driver: String,
+    val url: String,
+    val username: String,
+    val password: String
+)
+
+- Ajustar o arquivo 'DatabaseModule.kt' conforme abaixo
+
+val databaseModule = DI.Module("database") {
+    val properties = loadDatabaseProperties(ConfigFactory.load().getConfig("database"))
+    bindSingleton { buildDataSource(properties) }
+}
+
+private fun loadDatabaseProperties(config: Config) = DatabaseProperties(
+    driver = config.getString("driver"),
+    url = config.getString("url"),
+    username = config.getString("username"),
+    password = config.getString("password")
+)
+
+private fun buildDataSource(properties: DatabaseProperties): HikariDataSource {
+    val dataSource = HikariDataSource()
+    dataSource.driverClassName = properties.driver
+    dataSource.jdbcUrl = properties.url
+    dataSource.username = properties.username
+    dataSource.password = properties.password
+    return dataSource
+}
+
+

@@ -1,0 +1,189 @@
+====================================================================================================
+CURSO API REST KTOR - INJEÇÃO DE DEPENDÊNCIA
+====================================================================================================
+
+
+Dependência
+----------------------------------------------------------------------------------------------------
+- Adicionar a propriedade
+
+  ...
+  <kodein.version>X.XX.X</kodein.version>
+  ...
+  
+  Obs: Pegar a última versão no repositório Maven
+  
+- Adicionar a seguinte dependência
+
+        ...
+        <dependency>
+            <groupId>org.kodein.di</groupId>
+            <artifactId>kodein-di-jvm</artifactId>
+            <version>${kodein.version}</version>
+        </dependency>
+        ...
+
+
+DAO
+----------------------------------------------------------------------------------------------------
+- Alterar o arquivo 'ExpenseDAO.kt' conforme abaixo
+
+class ExpenseDAO(private val dataSource: HikariDataSource) {
+
+    fun insert(expense: Expense): Boolean {
+        val connection = dataSource.connection
+        var result = false
+        try {
+            val sql = "INSERT INTO expenses (description, value, paid_at) VALUES (?, ?, ?)"
+
+            val preparedStatement = connection.prepareStatement(sql, arrayOf("id"))
+            preparedStatement.setString(1, expense.description)
+            preparedStatement.setDouble(2, expense.value)
+            preparedStatement.setTimestamp(3, Timestamp.valueOf(expense.paid_at.atStartOfDay()))
+
+            result = preparedStatement.execute()
+            val key = preparedStatement.generatedKeys
+            if (key.next()) {
+                expense.id = key.getInt(1)
+            }
+        } catch(e: Exception) {
+            e.printStackTrace()
+        } finally {
+            connection.close()
+        }
+        return result
+    }
+
+}
+
+Serviço
+----------------------------------------------------------------------------------------------------
+- Alterar o arquivo 'ExpenseService.kt' conforme abaixo
+
+class ExpenseService(private val dao: ExpenseDAO) {
+
+    fun insert(expense: Expense) : Expense {
+        dao.insert(expense)
+        return expense
+    }
+
+}
+
+
+Modules
+----------------------------------------------------------------------------------------------------
+- Criar o pacote 'com.ctseducare.expensebook.di'
+
+- Criar o arquivo 'DatabaseModule.kt'
+
+val databaseModule = DI.Module("database") {
+    bindSingleton() { buildDataSource() }
+}
+
+private fun buildDataSource(): HikariDataSource {
+    val dataSource = HikariDataSource()
+    dataSource.driverClassName = "com.mysql.cj.jdbc.Driver"
+    dataSource.jdbcUrl = "jdbc:mysql://localhost:3306/expensebook"
+    dataSource.username = "root"
+    dataSource.password = "root"
+    return dataSource
+}
+
+- Criar o arquivo 'DAOModule.kt'
+
+val daoModule = DI.Module("dao") {
+    bindSingleton {
+        ExpenseDAO(
+            dataSource = instance()
+        )
+    }
+}
+
+- Criar o arquivo 'ServiceModule.kt'
+
+val serviceModule = DI.Module("service") {
+    bindSingleton { ExpenseService(dao = instance()) }
+}
+
+
+Route
+----------------------------------------------------------------------------------------------------
+- Alterar o arquivo 'ExpenseRoute.kt' conforme abaixo
+
+fun Route.expense(di: DI) {
+
+    val service by di.instance<ExpenseService>()
+    
+    route("/expenses") {
+        post {
+            val request = call.receive<Expense>()
+            val response = service.insert(request)
+            call.respond(HttpStatusCode.OK, response)
+        }
+    }
+    
+}
+
+
+Routing
+----------------------------------------------------------------------------------------------------
+- Alterar o arquivo 'Routing.kt' conforme abaixo
+
+fun Application.configureRouting(di: DI) {
+    routing {
+        status()
+        expense(di)
+    }
+}
+
+
+Arquivo principal
+----------------------------------------------------------------------------------------------------
+- Alterar o arquivo 'StartApplication.kt' conforme abaixo
+
+fun main(args: Array<String>): Unit = io.ktor.server.netty.EngineMain.main(args)
+
+fun Application.module() {
+    install(ContentNegotiation) {
+        json(Json { ignoreUnknownKeys = true })
+    }
+
+    val di = DI {
+        import(databaseModule)
+        import(daoModule)
+        import(serviceModule)
+    }
+    configureRouting(di)
+}
+
+
+Verificando
+----------------------------------------------------------------------------------------------------
+- Reiniciar a aplicação
+
+- Iniciar o Postman
+
+- Inserir uma nova despesa
+
+  URL:
+  
+    http://localhost:8080/expense
+  
+  Payload:
+  
+    {
+        "description": "Condomínio",
+        "value": 256.00,
+        "paid_at": "2023-11-05"
+    }
+
+  Resposta:
+  
+    {
+        "id": 2,
+        "description": "Condomínio",
+        "value": 256.00,
+        "paid_at": "2023-11-05"
+    }
+
+

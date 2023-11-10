@@ -1,0 +1,64 @@
+====================================================================================================
+CURSO API REST KTOR - DEPLOY - SERVIDOR TRADICIONAL UBUNTU
+====================================================================================================
+
+
+Preparando o servidor
+----------------------------------------------------------------------------------------------------
+- Instalar a versão desejada do Ubuntu Server numa máquina física ou virtual
+
+- Atualizar o sistema operacional
+
+  $ sudo apt update
+  $ sudo apt update
+
+- Instalar o servidor de SSH
+
+  $ sudo apt install openssh-server
+
+  Obs: O servidor SSH será utilizado para transferência de arquivos
+  
+
+Preparando o banco de dados
+----------------------------------------------------------------------------------------------------
+- Instalar o MySQL Server 8.x
+
+- Criar o banco de dados
+
+CREATE DATABASE expensebook;
+
+USE expensebook;
+
+CREATE TABLE expenses (
+  id INTEGER NOT NULL AUTO_INCREMENT,
+  description VARCHAR(100) NOT NULL,
+  value DECIMAL(11,2) NOT NULL,
+  paid_at DATE NOT NULL,
+  PRIMARY KEY (id)
+);
+
+
+Preparando o Java
+----------------------------------------------------------------------------------------------------
+- Instalar o Oracle JRE 17 ou OpenJDK JRE 17
+
+
+Disponibilizando a aplicação
+----------------------------------------------------------------------------------------------------
+- Criar um diretório para armazenar a aplicação
+
+- Transferir o arquivo 'expensebook-0.0.1-SNAPSHOT-jar-with-dependencies.jar' para o diretório
+
+- Criar o diretório de logs da aplicação
+
+  $ sudo mkdir /var/log/expensebook
+  $ chown $USER:$USER /var/log/expensebook
+
+- Executar a aplicação com o comando abaixo
+
+  java -jar <diretório>/expensebook-0.0.1-SNAPSHOT-jar-with-dependencies.jar
+     
+- Acessar documentação Swagger
+
+  http://<ip-servidor>:8080/swagger-ui
+

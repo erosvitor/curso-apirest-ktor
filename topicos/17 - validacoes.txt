@@ -1,0 +1,60 @@
+====================================================================================================
+CURSO API REST KTOR - VALIDAÇÕES
+====================================================================================================
+
+
+Dependência
+----------------------------------------------------------------------------------------------------
+- Adicionar as dependências
+
+        <dependency>
+            <groupId>io.ktor</groupId>
+            <artifactId>ktor-server-request-validation-jvm</artifactId>
+            <version>${ktor.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.ktor</groupId>
+            <artifactId>ktor-server-status-pages-jvm</artifactId>
+            <version>${ktor.version}</version>
+        </dependency>
+
+
+Plugins
+----------------------------------------------------------------------------------------------------
+- Adicionar os plugins abaixo do plugin 'ContentNegotiation' no arquivo 'StartApplication.kt'
+
+    ... 
+    install(RequestValidation) {
+        validate<Expense> { expense ->
+            if (expense.description.isNullOrBlank())
+                ValidationResult.Invalid("O campo 'description' é obrigatório")
+            else if (expense.value <= 0)
+                ValidationResult.Invalid("O campo 'value' não pode ser menor ou igual a zero")
+            else
+                ValidationResult.Valid
+        }
+    }
+
+    install(StatusPages) {
+        exception<RequestValidationException> { call, cause ->
+            call.respond(HttpStatusCode.BadRequest,  ExceptionResponse(400, cause.reasons.joinToString()))
+        }
+    }
+    ...
+
+
+Verificando
+----------------------------------------------------------------------------------------------------
+- Reiniciar a aplicação
+
+- Iniciar o Postman
+
+- Realizar uma requisição para incluir uma despesa com o campo 'description' vazio
+
+  Obs: O usuário receberá a seguinte resposta:
+  
+    {
+      "error": 404,
+      "reason": "O campo 'description' é obrigatório"
+    }
+

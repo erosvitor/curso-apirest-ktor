@@ -1,0 +1,257 @@
+====================================================================================================
+CURSO API REST KTOR - LOGGING
+====================================================================================================
+
+
+Dependência Logging
+----------------------------------------------------------------------------------------------------
+- Adicionar a seguinte dependência
+
+        ... 
+        <dependency>
+            <groupId>org.apache.logging.log4j</groupId>
+            <artifactId>log4j-slf4j-impl</artifactId>
+            <version>2.20.0</version>
+        </dependency>
+        <dependency>
+            <groupId>io.github.microutils</groupId>
+            <artifactId>kotlin-logging-jvm</artifactId>
+            <version>3.0.5</version>
+        </dependency>        
+        ...
+
+
+Objeto 'logger'
+----------------------------------------------------------------------------------------------------
+- Criar o objeto 'logger' na classe ExpenseDAO
+
+    ... 
+    private companion object {
+        val logger = KotlinLogging.logger(this::class.qualifiedName!!)
+    }
+    ...
+
+
+Exception
+----------------------------------------------------------------------------------------------------
+- Criar a exceção 'DatabaseException.kt'
+
+class DatabaseException(override val message: String) : Throwable()
+
+
+e.printStackTrace()
+----------------------------------------------------------------------------------------------------
+- No método 'insert' substituir o 'e.printStackTrace()' pelo seguinte código
+
+    ...
+    logger.error { e.message }
+    throw DatabaseException("Ocorreu um erro ao inserir a despesa!")
+    ...
+
+  Obs:
+  Efetuar a substituição nos demais métodos da classe 'ExpenseDAO'
+
+
+Rotas
+----------------------------------------------------------------------------------------------------
+- Alterar a rota POST conforme abaixo
+
+        ...
+        post {
+            val request = call.receive<Expense>()
+            try {
+                val response = service.insert(request)
+                call.respond(HttpStatusCode.OK, response)
+            } catch (e: DatabaseException) {
+                call.respond(HttpStatusCode.InternalServerError, e.message)
+            }
+        }
+        ...
+
+- Alterar a rota GET conforme abaixo
+
+        ...  
+        get {
+            try {
+                val response = service.findAll()
+                call.respond(HttpStatusCode.OK, response)
+            } catch (e: DatabaseException) {
+                call.respond(HttpStatusCode.InternalServerError, e.message)
+            }
+        }
+        ...
+        
+- Alterar o block 'catch' das rotas PUT e DELETE conforme abaixo
+
+        ...
+        } catch (e1: ResourceNotFoundException) {
+            call.respond(HttpStatusCode.NotFound, ExceptionResponse(HttpStatusCode.NotFound.value, e1.message))
+        } catch (e2: DatabaseException) {
+            call.respond(HttpStatusCode.InternalServerError, e2.message)
+        }
+        ...
+
+
+Verificando
+----------------------------------------------------------------------------------------------------
+- Forçar um erro de inclusão de dados
+
+  - Na instrução SQL para inserir uma despesa, adicionar o dígito 1 no final do nome do campo 'paid_at'
+    para torná-lo inválido
+    
+- Reiniciar a aplicação
+
+- Iniciar o Postman
+
+- Realizar a requisição para inserir uma despesa
+
+  Obs1: O usuário receberá a seguinte resposta:
+  
+    Ocorreu um erro ao inserir a despesa!
+    
+  Obs2: No console será exibida a seguinte mensagem:
+  
+    10:31:14.510 [eventLoopGroupProxy-4-1] ERROR com.ctseducare.expensebook.dao.ExpenseDAO.Companion - Unknown column 'paid_at1' in 'field list'
+
+
+Customizando as mensagens no console
+----------------------------------------------------------------------------------------------------
+- Criar o arquivo 'log4j2.xml' no folder 'src/main/resources'
+
+<Configuration>
+  <Appenders>
+    <Console name="LogToConsole" target="SYSTEM_OUT">
+      <PatternLayout pattern="%d{yyyy-MM-dd HH:mm:ss.SSS} %p %c: %m%n"/>
+    </Console>
+  </Appenders>
+  <Loggers>
+    <Root level="ERROR">
+      <AppenderRef ref="LogToConsole"/>
+    </Root>
+  </Loggers>
+</Configuration>
+
+
+Verificando
+----------------------------------------------------------------------------------------------------
+- Reiniciar a aplicação
+
+- Iniciar o Postman
+
+- Realizar a requisição para inserir uma despesa
+
+  Obs1: O usuário receberá a seguinte resposta:
+  
+    Ocorreu um erro ao inserir a despesa!
+    
+  Obs2: No console será exibida a seguinte mensagem:
+  
+    2023-06-09 11:18:10.582 ERROR com.ctseducare.expensebook.dao.ExpenseDAO.Companion: Unknown column 'paid_at1' in 'field list'
+
+
+Enviando as mensagens para arquivo em disco
+----------------------------------------------------------------------------------------------------
+- Alterar o arquivo 'log4j2.xml' conforme abaixo
+
+<Configuration>
+  <Appenders>
+    <Console name="LogToConsole" target="SYSTEM_OUT">
+      <PatternLayout pattern="%d{yyyy-MM-dd HH:mm:ss.SSS} %p %c: %m%n"/>
+    </Console>
+    <File name="LogToFile" fileName="/var/log/expensebook/expensebook.log">
+      <PatternLayout pattern="%d{yyyy-MM-dd HH:mm:ss.SSS} %p %c: %m%n"/>
+    </File>
+  </Appenders>
+  <Loggers>
+    <Root level="ERROR">
+      <AppenderRef ref="LogToConsole"/>
+      <AppenderRef ref="LogToFile"/>
+    </Root>
+  </Loggers>
+</Configuration>
+
+
+Verificando
+----------------------------------------------------------------------------------------------------
+- Reiniciar a aplicação
+
+- Iniciar o Postman
+
+- Realizar a requisição para inserir uma despesa
+
+  Obs1: O usuário receberá a seguinte resposta:
+  
+    Ocorreu um erro ao inserir a despesa!
+    
+  Obs2: No console será exibida a seguinte mensagem:
+  
+    2023-06-09 11:18:10.582 ERROR com.ctseducare.expensebook.dao.ExpenseDAO.Companion: Unknown column 'paid_at1' in 'field list'
+
+  Obs3: Será gerado um arquivo chamado 'expensebook.log' no diretório '/var/log/expensebook' contendo as mensagens de erro
+
+
+Rotacionando a geração do arquivo em disco
+----------------------------------------------------------------------------------------------------
+- Substituir o appender 'File' pelo appender 'RollingFile'
+
+  ...
+  <RollingFile name="LogToRollingFile" fileName="/var/log/expensebook/expensebook.log" filePattern="/var/log/expensebook/expensebook.log.%d{yyyy-MM-dd}-%i.gz">
+    <PatternLayout pattern="%d{yyyy-MM-dd HH:mm:ss.SSS} %p %c: %m%n"/>
+    <Policies>
+      <TimeBasedTriggeringPolicy/>
+      <SizeBasedTriggeringPolicy size="10 MB"/>
+    </Policies>
+  </RollingFile>
+  ...
+  
+  Obs: O arquivo de log será rotacionado diariamente ou quando o tamanho do arquivo atingir 10MB.
+
+- Ajustar o referência de 'LogToFile' para 'LogToRollingFile'
+
+  ...
+  <AppenderRef ref="LogToRollingFile"/>
+  ...
+
+
+Utilizando propriedades para nome do diretório e nome do log
+----------------------------------------------------------------------------------------------------
+- Alterar o arquivo 'log4j2.xml' conforme abaixo
+
+<Configuration>
+  <Properties>
+    <Property name="log-dir">/var/log/expensebook</Property>
+    <Property name="log-name">expensebook.log</Property>
+  </Properties>
+  <Appenders>
+    <Console name="LogToConsole" target="SYSTEM_OUT">
+      <PatternLayout pattern="%d{yyyy-MM-dd HH:mm:ss.SSS} %p %c: %m%n"/>
+    </Console>
+    <RollingFile name="LogToRollingFile" fileName="${log-dir}/${log-name}" filePattern="${log-dir}/${log-name}.%d{yyyy-MM-dd}-%i.gz">
+      <PatternLayout pattern="%d{yyyy-MM-dd HH:mm:ss.SSS} %p %c: %m%n"/>
+      <Policies>
+        <TimeBasedTriggeringPolicy/>
+        <SizeBasedTriggeringPolicy size="10 MB"/>
+      </Policies>
+    </RollingFile>
+  </Appenders>
+  <Loggers>
+    <Root level="ERROR">
+      <AppenderRef ref="LogToConsole"/>
+      <AppenderRef ref="LogToRollingFile"/>
+    </Root>
+  </Loggers>
+</Configuration>
+
+
+Quantidade de arquivos por dia
+----------------------------------------------------------------------------------------------------
+- A quantidade padrão de arquivos por dia é 7. Para alterar essa quantidade pode-se utilizar a
+  configuração 'DefaultRolloverStrategy'
+  
+  ...
+  <DefaultRolloverStrategy max="10"/>
+  ...
+  
+  Obs: A configuração deve estar abaixo de '</Policies>'
+
+

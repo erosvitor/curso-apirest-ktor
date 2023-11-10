@@ -1,0 +1,50 @@
+====================================================================================================
+CURSO API REST KTOR - DAO
+====================================================================================================
+
+
+DAO
+----------------------------------------------------------------------------------------------------
+- Criar o pacote 'com.ctseducare.expensebook.dao'
+
+- Criar a classe 'ExpenseDAO.kt'
+
+import com.ctseducare.expensebook.model.Expense
+import com.zaxxer.hikari.HikariDataSource
+import java.sql.Timestamp
+
+class ExpenseDAO {
+
+    fun insert(expense: Expense): Boolean {
+        val dataSource = HikariDataSource()
+        dataSource.driverClassName = "com.mysql.cj.jdbc.Driver"
+        dataSource.jdbcUrl = "jdbc:mysql://localhost:3306/expensebook"
+        dataSource.username = "root"
+        dataSource.password = "root"
+
+        val connection = dataSource.connection
+        var result = false
+        try {
+            val sql = "INSERT INTO expenses (description, value, paid_at) VALUES (?, ?, ?)"
+
+            val preparedStatement = connection.prepareStatement(sql, arrayOf("id"))
+            preparedStatement.setString(1, expense.description)
+            preparedStatement.setDouble(2, expense.value)
+            preparedStatement.setTimestamp(3, Timestamp.valueOf(expense.paid_at.atStartOfDay()))
+
+            result = preparedStatement.execute()
+            val key = preparedStatement.generatedKeys
+            if (key.next()) {
+                expense.id = key.getInt(1);
+            }
+        } catch(e: Exception) {
+            e.printStackTrace()
+        } finally {
+            connection.close()
+        }
+        return result
+    }
+
+}
+
+

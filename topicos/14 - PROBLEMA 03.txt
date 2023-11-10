@@ -1,0 +1,17 @@
+====================================================================================================
+CURSO API REST KTOR - PROBLEMA 03
+====================================================================================================
+
+
+Problemas encontrados até o momento
+----------------------------------------------------------------------------------------------------
+- Os endpoints para alterar e excluir não verificam se o item realmente existe antes da operação
+  ser executada.
+
+
+Soluções
+----------------------------------------------------------------------------------------------------
+- Verificar se o item existe 
+- Disparar uma exceção caso o item não exista
+
+

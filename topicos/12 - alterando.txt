@@ -1,0 +1,89 @@
+====================================================================================================
+CURSO API REST KTOR - ALTERANDO
+====================================================================================================
+
+
+DAO
+----------------------------------------------------------------------------------------------------
+- Acrescentar o seguinte método no arquivo 'ExpenseDAO.kt'
+
+    ...
+    fun update(expense: Expense): Boolean {
+        val connection = dataSource.connection
+        var result = false
+        try {
+            val sql = "UPDATE expenses SET description = ?, value = ?, paid_at = ? WHERE id = ?"
+
+            val preparedStatement = connection.prepareStatement(sql)
+            preparedStatement.setString(1, expense.description)
+            preparedStatement.setDouble(2, expense.value)
+            preparedStatement.setTimestamp(3, Timestamp.valueOf(expense.paid_at.atStartOfDay()))
+            preparedStatement.setInt(4, expense.id!!)
+
+            result = preparedStatement.execute()
+        } catch(e: Exception) {
+            e.printStackTrace()
+        } finally {
+            connection.close()
+        }
+        return result
+    }
+    ...
+    
+    
+Service
+----------------------------------------------------------------------------------------------------
+- Acrescentar o seguinte método no arquivo 'ExpenseService.kt'
+
+    ...
+    fun update(expense: Expense) : Expense {
+        dao.update(expense)
+        return expense
+    }
+    ...
+    
+
+Route
+----------------------------------------------------------------------------------------------------
+- Acrescentar a seguinte rota no arquivo 'ExpenseRoute.kt'
+
+        ...
+        put {
+            val request = call.receive<Expense>()
+            val response = service.update(request)
+            call.respond(HttpStatusCode.OK, response)
+        }
+        ...
+
+
+Verificando
+----------------------------------------------------------------------------------------------------
+- Reiniciar a aplicação
+
+- Iniciar o Postman
+
+- Criar uma requisição PUT
+
+  URL:
+  
+    http://localhost:8080/expense
+  
+  Payload:
+  
+    {
+        "id": 1,
+        "description": "Luz",
+        "value": 125.00,
+        "paid_at": "2023-11-05"
+    }
+
+  Resposta:
+  
+    {
+        "id": 1,
+        "description": "Luz",
+        "value": 125.00,
+        "paid_at": "2023-11-05"
+    }
+
+

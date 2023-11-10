@@ -1,0 +1,163 @@
+====================================================================================================
+CURSO API REST KTOR - PROJETO
+====================================================================================================
+
+
+Projeto
+----------------------------------------------------------------------------------------------------
+- Abrir o 'IntelliJ'
+
+- Clicar no botão 'New Project'
+
+- Preencher os seguintes campos
+
+  Name: expensebook
+  Language: Kotlin
+  Build system: Maven
+  JDK: 17
+  
+  Advanced Settings
+    GroupId: com.ctseducare
+    ArtifactId: expensebook
+
+- Clicar no botão 'Create'
+
+
+Customizando o arquivo 'pom.xml'
+----------------------------------------------------------------------------------------------------
+- Remover as seguintes linhas
+
+  ...
+  <name>consoleApp</name>
+  ...
+  
+  ...
+  <plugin>
+    <artifactId>maven-surefire-plugin</artifactId>
+    <version>2.22.2</version>
+  </plugin>
+  <plugin>
+    <artifactId>maven-failsafe-plugin</artifactId>
+    <version>2.22.2</version>
+  </plugin>
+  ...
+  
+  ...
+  <dependency>
+    <groupId>org.jetbrains.kotlin</groupId>
+    <artifactId>kotlin-test-junit5</artifactId>
+    <version>1.7.21</version>
+    <scope>test</scope>
+  </dependency>
+  <dependency>
+    <groupId>org.junit.jupiter</groupId>
+    <artifactId>junit-jupiter-engine</artifactId>
+    <version>5.8.2</version>
+    <scope>test</scope>
+  </dependency>
+  ...
+  
+
+Ktor dependency
+----------------------------------------------------------------------------------------------------
+- Criar a propriedade 'ktor.version'
+
+  <ktor.version>X.X.X</ktor.version>
+
+  Obs: Pegar a última versão no site oficial do Ktor
+  
+- Adicionar as seguintes dependências
+
+  ...
+  <dependency>
+     <groupId>io.ktor</groupId>
+     <artifactId>ktor-server-core-jvm</artifactId>
+     <version>${ktor.version}</version>
+  </dependency>
+  <dependency>
+     <groupId>io.ktor</groupId>
+     <artifactId>ktor-server-netty-jvm</artifactId>
+     <version>${ktor.version}</version>
+  </dependency>
+  ...
+
+
+Endpoint Status
+----------------------------------------------------------------------------------------------------
+- Criar o pacote 'com.ctseducare.expensebook.route'
+
+- Criar o arquivo 'StatusRoute.kt'
+
+import io.ktor.http.HttpStatusCode
+import io.ktor.server.application.call
+import io.ktor.server.response.respond
+import io.ktor.server.routing.Route
+import io.ktor.server.routing.get
+import io.ktor.server.routing.route
+
+fun Route.status() {
+    route ("/status") {
+        get {
+            call.respond(HttpStatusCode.OK, "I am up!")
+        }
+    }
+}
+
+
+Routing
+----------------------------------------------------------------------------------------------------
+- Criar o pacote 'com.ctseducare.expensebook.routing'
+
+- Criar o arquivo 'Routing.kt'
+
+import com.ctseducare.expensebook.route.status
+import io.ktor.server.application.Application
+import io.ktor.server.routing.routing
+
+fun Application.configureRouting() {
+    routing {
+        status()
+    }
+}
+
+
+Função principal
+----------------------------------------------------------------------------------------------------
+- Criar o arquivo 'StartApplication.kt' dentro do pacote 'com.ctseducare.expensebook'
+
+import com.ctseducare.expensebook.routing.configureRouting
+import io.ktor.server.application.Application
+
+fun main(args: Array<String>): Unit = io.ktor.server.netty.EngineMain.main(args)
+
+fun Application.module() {
+    configureRouting()
+}
+
+
+Configurações iniciais
+----------------------------------------------------------------------------------------------------
+- Criar o arquivo 'application.conf' dentro do folder 'src/main/resources'
+
+ktor {
+    deployment {
+        port = 8080
+        port = ${?PORT}
+    }
+    application {
+        modules = [ com.ctseducare.expensebook.StartApplicationKt.module ]
+    }
+}
+
+
+Verificando
+----------------------------------------------------------------------------------------------------
+- Dentro do arquivo 'StartApplication.kt', clicar com botão direito, selecionar Run 'StartApplicationKt'
+
+- Abrir um navegador web e informar o endereço abaixo
+
+  http://localhost:8080/status
+
+  Obs: A mensagem 'I am up!' deve ser exibida
+
+

@@ -1,0 +1,85 @@
+====================================================================================================
+CURSO API REST KTOR - INSERT
+====================================================================================================
+
+
+Serviço
+----------------------------------------------------------------------------------------------------
+- Criar o pacote 'com.ctseducare.expensebook.service'
+
+- Criar a classe 'ExpenseService.kt'
+
+class ExpenseService {
+
+    fun insert(expense: Expense) : Expense {
+        dao.insert(expense)
+        return expense
+    }
+
+    private companion object {
+        val dao = ExpenseDAO()
+    }
+
+}
+
+
+Route
+----------------------------------------------------------------------------------------------------
+- Criar o arquivo 'ExpenseRoute.kt' no pacote 'com.ctseducare.expensebook.route'
+
+fun Route.expense() {
+    route("/expenses") {
+        post {
+            val request = call.receive<Expense>()
+            
+            val service = ExpenseService()
+            val response = service.insert(request)
+            
+            call.respond(HttpStatusCode.OK, response)
+        }
+    }
+}
+
+
+Routing
+----------------------------------------------------------------------------------------------------
+- Alterar a função 'configureRouting' que esta no arquivo 'Routing.kt'
+
+fun Application.configureRouting() {
+    routing {
+        status()
+        expense()
+    }
+}
+
+
+Verificando
+----------------------------------------------------------------------------------------------------
+- Reiniciar a aplicação
+
+- Iniciar o Postman
+
+- Criar uma requisição POST
+
+  URL:
+  
+    http://localhost:8080/expenses
+  
+  Payload:
+  
+    {
+        "description": "Luz",
+        "value": 147.80,
+        "paid_at": "2023-11-05"
+    }
+
+  Resposta:
+  
+    {
+        "id": 1,
+        "description": "Luz",
+        "value": 147.8,
+        "paid_at": "2023-11-05" 
+    }
+
+

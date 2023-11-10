@@ -1,0 +1,16 @@
+====================================================================================================
+CURSO API REST KTOR - PROBLEMA 04
+====================================================================================================
+
+
+Problemas encontrados até o momento
+----------------------------------------------------------------------------------------------------
+- As exceções geradas por falhas no banco de dados são registradas no console pelo comando
+  e.printStackTrace()
+
+
+Solução
+----------------------------------------------------------------------------------------------------
+- Registrar em arquivo em disco utilizando uma bibliteca de logging
+
+

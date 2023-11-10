@@ -1,0 +1,75 @@
+====================================================================================================
+CURSO API REST KTOR - EXCLUINDO
+====================================================================================================
+
+
+DAO
+----------------------------------------------------------------------------------------------------
+- Acrescentar o seguinte método no arquivo 'ExpenseDAO.kt'
+
+    ...
+    fun delete(id: Int): Boolean {
+        val connection = dataSource.connection
+        var result = false
+        try {
+            val sql = "DELETE FROM expenses WHERE id = ?"
+
+            val preparedStatement = connection.prepareStatement(sql)
+            preparedStatement.setInt(1, id)
+
+            result = preparedStatement.execute()
+        } catch(e: Exception) {
+            e.printStackTrace()
+        } finally {
+            connection.close()
+        }
+        return result
+    }
+    ...
+    
+    
+Service
+----------------------------------------------------------------------------------------------------
+- Acrescentar o seguinte método no arquivo 'ExpenseService.kt'
+
+    ...
+    fun delete(id: Int) = dao.delete(id)
+    ...
+    
+
+Route
+----------------------------------------------------------------------------------------------------
+- Acrescentar a seguinte rota no arquivo 'ExpenseRoute.kt'
+
+        ...
+        route("/{id}") {
+            delete {
+                val id = call.parameters["id"]?.toInt() ?: 0
+                val response = service.delete(id)
+                call.respond(HttpStatusCode.OK, "Deleted")
+            }
+        }
+        ...
+
+
+Verificando
+----------------------------------------------------------------------------------------------------
+- Reiniciar a aplicação
+
+- Iniciar o Postman
+
+- Criar uma requisição DELETE
+
+  URL:
+  
+    http://localhost:8080/expense/1
+  
+  Payload:
+  
+    N.A.
+    
+  Resposta:
+  
+    Deleted
+
+

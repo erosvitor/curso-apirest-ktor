@@ -1,0 +1,96 @@
+====================================================================================================
+CURSO API REST KTOR - SERIALIZATION
+====================================================================================================
+
+
+Dependências
+----------------------------------------------------------------------------------------------------
+- Adicionar as dependências
+
+  ... 
+  <dependency>
+     <groupId>io.ktor</groupId>
+     <artifactId>ktor-serialization-kotlinx-json-jvm</artifactId>
+     <version>${ktor.version}</version>
+  </dependency>
+  <dependency>
+     <groupId>io.ktor</groupId>
+     <artifactId>ktor-server-content-negotiation-jvm</artifactId>
+     <version>${ktor.version}</version>
+  </dependency>
+  ...
+
+
+Propriedades
+----------------------------------------------------------------------------------------------------
+- Adicionar a propriedade
+
+  ...
+  <jvm.version>17</jvm.version>
+  ...
+
+
+Plugins
+----------------------------------------------------------------------------------------------------
+- Adicionar as seguintes configurações abaixo de 'executions' do plugin 'kotlin-maven-plugin'
+
+  ... 
+  <configuration>
+    <compilerPlugins>
+      <plugin>kotlinx-serialization</plugin>
+    </compilerPlugins>
+    <jvmTarget>${jvm.version}</jvmTarget>
+  </configuration>
+
+
+JSON
+----------------------------------------------------------------------------------------------------
+- Adicionar as seguintes linhas abaixo de 'Application.module()' no arquivo 'StartApplication.kt'
+
+  ...
+  install(ContentNegotiation) {
+      json(Json { ignoreUnknownKeys = true })
+  }
+  ...
+
+- O resultado final deve ser igual a
+
+import com.ctseducare.expensebook.routing.configureRouting
+import kotlinx.serialization.json.Json
+import io.ktor.serialization.kotlinx.json.json
+import io.ktor.server.application.Application
+import io.ktor.server.application.install
+import io.ktor.server.plugins.contentnegotiation.ContentNegotiation
+
+fun main(args: Array<String>): Unit = io.ktor.server.netty.EngineMain.main(args)
+
+fun Application.module() {
+    install(ContentNegotiation) {
+        json(Json { ignoreUnknownKeys = true })
+    }
+    configureRouting()
+}
+
+
+Serialização customizada
+----------------------------------------------------------------------------------------------------
+- Criar o pacote 'com.ctseducare.expensebook.utils'
+
+- Criar o arquivo 'SerializeUtils.kt'
+
+object LocalDateSerializer : KSerializer<LocalDate> {
+    override val descriptor = PrimitiveSerialDescriptor("LocalDate", PrimitiveKind.STRING)
+
+    override fun deserialize(decoder: Decoder): LocalDate {
+        return LocalDate.parse(decoder.decodeString())
+    }
+
+    override fun serialize(encoder: Encoder, value: LocalDate) {
+        encoder.encodeString(value.toString())
+    }
+}
+
+Obs: Caso aparece um erro exibindo a mensagem 'Set language level to 8-Lambdas, type annotations etc', vá em 
+File -> Project Structure -> Modules, selecione a aba 'Sources', no campo 'Language Level' selecione 
+17 - Sealed types, always-strict floating-point semantics
+
