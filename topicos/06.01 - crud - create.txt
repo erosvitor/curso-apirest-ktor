@@ -11,8 +11,8 @@ Serviço
 
 class ExpenseService {
 
-    fun insert(expense: Expense) : Expense {
-        dao.insert(expense)
+    fun create(expense: Expense) : Expense {
+        dao.create(expense)
         return expense
     }
 
@@ -33,7 +33,7 @@ fun Route.expense() {
             val request = call.receive<Expense>()
             
             val service = ExpenseService()
-            val response = service.insert(request)
+            val response = service.create(request)
             
             call.respond(HttpStatusCode.OK, response)
         }
@@ -81,5 +81,4 @@ Verificando
         "value": 147.8,
         "paid_at": "2023-11-05" 
     }
-
 

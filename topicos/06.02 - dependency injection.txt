@@ -30,7 +30,7 @@ DAO
 
 class ExpenseDAO(private val dataSource: HikariDataSource) {
 
-    fun insert(expense: Expense): Boolean {
+    fun create(expense: Expense): Boolean {
         val connection = dataSource.connection
         var result = false
         try {
@@ -62,8 +62,8 @@ Serviço
 
 class ExpenseService(private val dao: ExpenseDAO) {
 
-    fun insert(expense: Expense) : Expense {
-        dao.insert(expense)
+    fun create(expense: Expense) : Expense {
+        dao.create(expense)
         return expense
     }
 
@@ -117,7 +117,7 @@ fun Route.expense(di: DI) {
     route("/expenses") {
         post {
             val request = call.receive<Expense>()
-            val response = service.insert(request)
+            val response = service.create(request)
             call.respond(HttpStatusCode.OK, response)
         }
     }
@@ -167,7 +167,7 @@ Verificando
 
   URL:
   
-    http://localhost:8080/expense
+    http://localhost:8080/expenses
   
   Payload:
   

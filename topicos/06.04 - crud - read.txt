@@ -8,7 +8,7 @@ DAO
 - Acrescentar os seguintes métodos no arquivo 'ExpenseDAO.kt'
 
     ...
-    fun findAll(): List<Expense> {
+    fun readAll(): List<Expense> {
         val connection = dataSource.connection
         var resultSet: ResultSet? = null
         var list = mutableListOf<Expense>()
@@ -44,7 +44,7 @@ Service
 - Acrescentar o seguinte método no arquivo 'ExpenseService.kt'
 
     ...
-    fun findAll() = dao.findAll()
+    fun readAll() = dao.readAll()
     ...
     
 
@@ -54,7 +54,7 @@ Route
 
     ...
     get {
-       val response = service.findAll()
+       val response = service.readAll()
        call.respond(HttpStatusCode.OK, response)
     }
     ...
