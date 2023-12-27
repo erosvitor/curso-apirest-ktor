@@ -19,7 +19,7 @@ Preparando script do banco de dados para o Docker Compose
 
 - Criar o arquivo 'expensebook.sql'
 
-CREATE DATABASE expensebook;
+CREATE DATABASE expensebook CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci;
 
 USE expensebook;
 
@@ -29,7 +29,8 @@ CREATE TABLE expenses (
   value DECIMAL(11,2) NOT NULL,
   paid_at DATE NOT NULL,
   PRIMARY KEY (id)
-);
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3 COLLATE utf8mb3_general_ci;
+
 
 Preparando o arquivo docker-compose.yml
 ----------------------------------------------------------------------------------------------------
@@ -49,7 +50,6 @@ services:
     restart: always
     environment:
       TZ: America/Sao_Paulo
-      MYSQL_DATABASE: expensebook
       MYSQL_ROOT_PASSWORD: root
       MYSQL_TCP_PORT: 3308
     ports:
