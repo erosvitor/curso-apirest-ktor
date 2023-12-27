@@ -35,7 +35,7 @@ fun Route.expense() {
             val service = ExpenseService()
             val response = service.create(request)
             
-            call.respond(HttpStatusCode.OK, response)
+            call.respond(HttpStatusCode.Created, response)
         }
     }
 }
