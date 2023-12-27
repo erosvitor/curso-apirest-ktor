@@ -45,8 +45,8 @@ Route
         route("/{id}") {
             delete {
                 val id = call.parameters["id"]?.toInt() ?: 0
-                val response = service.delete(id)
-                call.respond(HttpStatusCode.OK, "Deleted")
+                service.delete(id)
+                call.respond(HttpStatusCode.NoContent)
             }
         }
         ...
@@ -70,6 +70,5 @@ Verificando
     
   Resposta:
   
-    Deleted
-
+    204 No Content
 
